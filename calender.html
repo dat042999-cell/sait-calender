@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f4f1ea">
+<title>SAIT Timetable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f1ea; --card:#fffdf9; --line:#e2dccf; --line-soft:#eee9dd;
+    --ink:#1c2333; --ink-2:#4a5266; --ink-3:#7b8296;
+    --accent:#2447e0; --accent-dark:#1a36b3; --accent-soft:#e8edff;
+    --ok:#17803d; --warn:#b45309; --danger:#c62828;
+    --radius:14px;
+    --font-display:'Bricolage Grotesque','DM Sans',system-ui,sans-serif;
+    --font-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --font-mono:'DM Mono',ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  [hidden]{ display:none !important; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    font-family:var(--font-body); font-size:14.5px; line-height:1.5; color:var(--ink);
+    background-color:var(--paper);
+    background-image:radial-gradient(#e4ddcd 1px, transparent 1px);
+    background-size:22px 22px;
+    min-height:100vh;
+  }
+  button{ font-family:inherit; font-size:inherit; color:inherit; cursor:pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+  .wrap{ max-width:1280px; margin:0 auto; padding:20px 20px 48px; }
+
+  /* Header */
+  .top{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:20px; }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:40px; height:40px; border-radius:11px; background:var(--ink); padding:8px;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:3px;
+  }
+  .brand-mark i{ display:block; border-radius:2px; background:#fff; opacity:.9; }
+  .brand-mark i:nth-child(2),.brand-mark i:nth-child(6),.brand-mark i:nth-child(7){ background:#7f9bff; }
+  .brand-mark i:nth-child(5){ background:#ffc857; }
+  .brand h1{ font-family:var(--font-display); font-size:25px; font-weight:800; letter-spacing:-.02em; line-height:1.1; }
+  .brand p{ font-size:13px; color:var(--ink-3); }
+  .top-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .lang{ display:flex; background:#ebe5d6; border-radius:999px; padding:3px; }
+  .lang button{ border:none; background:transparent; padding:5px 12px; border-radius:999px; font-weight:700; font-size:12px; color:var(--ink-2); }
+  .lang button[aria-pressed="true"]{ background:#fff; color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.12); }
+
+  /* Layout */
+  .layout{ display:grid; grid-template-columns:minmax(330px,410px) minmax(0,1fr); gap:20px; align-items:start; }
+  .col{ display:flex; flex-direction:column; gap:16px; min-width:0; }
+  @media (max-width:980px){ .layout{ grid-template-columns:1fr; } }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:0 1px 0 rgba(0,0,0,.02); }
+  .card h2{ font-family:var(--font-display); font-size:18px; font-weight:700; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .step{ width:25px; height:25px; border-radius:50%; background:var(--ink); color:#fff; font-size:12px; display:grid; place-items:center; font-family:var(--font-mono); flex-shrink:0; }
+  .hint{ font-size:12.5px; color:var(--ink-3); }
+
+  /* Form controls */
+  .field{ margin-bottom:12px; }
+  .lbl{ display:block; font-size:12px; font-weight:700; color:var(--ink-2); margin-bottom:5px; }
+  input[type=text], input[type=date], input[type=time], select{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:9px;
+    background:#fff; font:inherit; font-size:14px; color:var(--ink);
+  }
+  input[type=time], input[type=date]{ font-family:var(--font-mono); font-size:13.5px; }
+  .row{ display:grid; gap:10px; }
+  .row.two{ grid-template-columns:1fr 1fr; }
+  .seg{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:4px; background:#ebe5d6; padding:3px; border-radius:11px; }
+  .seg label{ position:relative; display:block; }
+  .seg input{ position:absolute; opacity:0; inset:0; width:100%; height:100%; cursor:pointer; }
+  .seg span{ display:block; text-align:center; padding:7px 8px; border-radius:8px; font-size:13px; font-weight:600; color:var(--ink-2); }
+  .seg input:checked + span{ background:#fff; color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.14); }
+  .seg input:focus-visible + span{ outline:2px solid var(--accent); }
+  .days{ display:flex; flex-wrap:wrap; gap:6px; }
+  .days label{ position:relative; }
+  .days input{ position:absolute; opacity:0; inset:0; width:100%; height:100%; cursor:pointer; }
+  .days span{ display:block; min-width:44px; text-align:center; padding:7px 0; border:1px solid var(--line); border-radius:9px; background:#fff; font-weight:700; font-size:13px; color:var(--ink-2); }
+  .days input:checked + span{ background:var(--ink); border-color:var(--ink); color:#fff; }
+  .days input:focus-visible + span{ outline:2px solid var(--accent); outline-offset:2px; }
+  .swatches{ display:flex; gap:8px; flex-wrap:wrap; }
+  .swatches label{ position:relative; }
+  .swatches input{ position:absolute; opacity:0; inset:0; width:100%; height:100%; cursor:pointer; }
+  .swatches span{ display:block; width:26px; height:26px; border-radius:50%; background:var(--c-bd); border:2px solid #fff; box-shadow:0 0 0 1px var(--line); }
+  .swatches input:checked + span{ box-shadow:0 0 0 2px var(--ink); }
+  .swatches input:focus-visible + span{ outline:2px solid var(--accent); outline-offset:3px; }
+  details.sub{ border:1px dashed var(--line); border-radius:10px; padding:9px 11px; margin-bottom:12px; background:#fffaf0; }
+  details.sub summary{ cursor:pointer; font-size:12.5px; font-weight:700; color:var(--ink-2); }
+  details.sub .inner{ margin-top:10px; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:1px solid var(--line); background:#fff; padding:9px 15px; border-radius:10px; font-weight:700; font-size:14px;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .btn:hover{ background:#faf7f0; }
+  .btn:active{ transform:translateY(1px); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover{ background:var(--accent-dark); }
+  .btn.dark{ background:var(--ink); border-color:var(--ink); color:#fff; }
+  .btn.dark:hover{ background:#2c3650; }
+  .btn.small{ padding:5px 10px; font-size:12.5px; border-radius:8px; }
+  .btn[disabled]{ opacity:.45; cursor:not-allowed; }
+  .btn.danger{ color:var(--danger); }
+  .btn-link{ border:none; background:none; color:var(--accent); font-weight:700; font-size:13px; padding:2px 4px; text-decoration:underline; }
+  .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+  .err{ color:var(--danger); font-size:13px; font-weight:600; margin:8px 0 0; min-height:0; }
+  .warn{ color:var(--warn); font-size:13px; font-weight:600; }
+
+  /* Break rows */
+  .break-row{ display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end; margin-bottom:8px; }
+  .break-row .x{ width:34px; height:36px; border:1px solid var(--line); border-radius:9px; background:#fff; font-size:16px; color:var(--ink-2); }
+
+  /* Course list */
+  .course-list{ list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .course{ display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:start; padding:10px 11px; border:1px solid var(--line); border-radius:11px; background:#fff; }
+  .course .dot{ width:10px; height:10px; border-radius:50%; background:var(--c-bd); margin-top:6px; }
+  .course b{ font-weight:700; }
+  .chip{ display:inline-block; font-size:11px; font-weight:700; padding:1px 7px; border-radius:999px; background:var(--c-bg); color:var(--c-ink); margin-left:4px; vertical-align:1px; }
+  .cmeta{ font-size:12.5px; color:var(--ink-3); }
+  .cmeta.mono{ font-family:var(--font-mono); font-size:12px; }
+  .cact{ display:flex; gap:4px; }
+  .empty{ text-align:center; padding:26px 14px; color:var(--ink-3); border:1px dashed var(--line); border-radius:12px; background:#fffaf0; }
+
+  /* Timetable grid */
+  .tt-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:#fff; }
+  .tt{ min-width:640px; }
+  .tt-head{ display:grid; grid-template-columns:54px repeat(var(--ncols),1fr); background:#faf7f0; border-bottom:1px solid var(--line); }
+  .tt-head div{ padding:9px 4px; text-align:center; font-weight:700; font-size:13px; color:var(--ink-2); }
+  .tt-body{ display:grid; grid-template-columns:54px repeat(var(--ncols),1fr); position:relative; }
+  .tt-times{ position:relative; }
+  .tt-times span{ position:absolute; right:7px; transform:translateY(-50%); font-family:var(--font-mono); font-size:11px; color:var(--ink-3); background:#fff; padding:0 2px; }
+  .tt-times span.first{ transform:none; }
+  .tt-col{
+    position:relative; border-left:1px solid var(--line-soft);
+    background-image:linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size:100% var(--hour);
+  }
+  .ev{
+    position:absolute; overflow:hidden; text-align:left; border:none; border-left:4px solid var(--c-bd);
+    background:var(--c-bg); color:var(--c-ink); border-radius:8px; padding:4px 7px; font-size:12px; line-height:1.28;
+    box-shadow:0 1px 2px rgba(0,0,0,.08); transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .ev:hover{ transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.14); z-index:3; }
+  .ev.conflict{ outline:2px solid var(--danger); outline-offset:-1px; }
+  .ev b{ display:block; font-weight:700; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ev .n{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.9; }
+  .ev .m{ display:block; font-family:var(--font-mono); font-size:10.5px; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .conflicts{ margin-bottom:12px; padding:10px 12px; border:1px solid #f0c9c9; background:#fff3f1; border-radius:10px; }
+  .conflicts b{ color:var(--danger); font-size:13px; }
+  .conflicts li{ margin:4px 0 0 18px; font-size:13px; }
+  .once-list{ list-style:none; margin-top:14px; display:flex; flex-direction:column; gap:6px; }
+  .once-list li{ display:flex; gap:10px; align-items:center; padding:8px 11px; border:1px solid var(--line); border-left:4px solid var(--c-bd); background:var(--c-bg); color:var(--c-ink); border-radius:9px; font-size:13px; }
+  .once-list .when{ font-family:var(--font-mono); font-size:12px; margin-left:auto; white-space:nowrap; }
+  .sub-title{ font-family:var(--font-display); font-weight:700; font-size:14px; margin-top:16px; }
+
+  /* Export */
+  .summary{ padding:11px 13px; border-radius:10px; background:var(--accent-soft); color:#18287a; font-weight:600; margin-bottom:12px; }
+  .summary.empty-s{ background:#f1ede2; color:var(--ink-3); }
+  .export-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:720px){ .export-grid{ grid-template-columns:1fr; } }
+  .export-box{ border:1px solid var(--line); border-radius:12px; padding:14px; background:#fff; display:flex; flex-direction:column; gap:10px; }
+  .export-box h3{ font-family:var(--font-display); font-size:15px; font-weight:700; }
+  .gbtn{ background:#fff; }
+  .gchip{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--line); border-radius:999px; padding:4px 6px 4px 5px; font-size:13px; font-weight:600; }
+  .gchip img{ width:26px; height:26px; border-radius:50%; }
+  .status{ font-size:13px; font-weight:600; padding:9px 11px; border-radius:9px; background:#f1ede2; color:var(--ink-2); }
+  .status.ok{ background:#e3f5e8; color:var(--ok); }
+  .status.err{ background:#fdeaea; color:var(--danger); }
+  .bar{ height:6px; background:var(--line-soft); border-radius:6px; overflow:hidden; }
+  .bar i{ display:block; height:100%; width:0; background:var(--accent); transition:width .2s ease; }
+  .log{ list-style:none; font-size:12.5px; display:flex; flex-direction:column; gap:3px; max-height:160px; overflow:auto; }
+  .log li.bad{ color:var(--danger); }
+  details.guide{ margin-top:14px; border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#fffaf0; }
+  details.guide summary{ cursor:pointer; font-weight:700; }
+  details.guide ol{ margin:10px 0 10px 20px; display:flex; flex-direction:column; gap:5px; font-size:13.5px; }
+  details.guide code{ font-family:var(--font-mono); font-size:12px; background:#f0ead9; padding:1px 5px; border-radius:5px; word-break:break-all; }
+  .client-row{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-top:8px; }
+  .foot{ margin-top:26px; text-align:center; font-size:12.5px; color:var(--ink-3); }
+
+  @media (max-width:520px){
+    .wrap{ padding:14px 12px 40px; }
+    .card{ padding:15px; }
+    .brand h1{ font-size:22px; }
+  }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div>
+        <h1>SAIT Timetable</h1>
+        <p data-i18n="tagline"></p>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="vi" aria-pressed="true">VI</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <div id="gHeader"></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- LEFT COLUMN -->
+    <div class="col">
+
+      <section class="card" aria-labelledby="h-term">
+        <h2 id="h-term"><span class="step">1</span><span data-i18n="step1"></span></h2>
+        <div class="row two">
+          <div class="field">
+            <label class="lbl" for="termStart" data-i18n="term_start"></label>
+            <input type="date" id="termStart">
+          </div>
+          <div class="field">
+            <label class="lbl" for="termEnd" data-i18n="term_end"></label>
+            <input type="date" id="termEnd">
+          </div>
+        </div>
+        <p class="warn" id="termMsg" hidden></p>
+
+        <div class="field" style="margin-top:6px;">
+          <span class="lbl" data-i18n="breaks"></span>
+          <p class="hint" data-i18n="breaks_hint" style="margin-bottom:8px;"></p>
+          <div id="breakList"></div>
+          <button type="button" class="btn small" id="addBreak" data-i18n="add_break"></button>
+        </div>
+
+        <div class="field" style="margin-top:14px;">
+          <label class="lbl" for="reminder" data-i18n="reminder"></label>
+          <select id="reminder">
+            <option value="none" data-i18n="rem_none"></option>
+            <option value="10" data-i18n="rem_10"></option>
+            <option value="15" data-i18n="rem_15"></option>
+            <option value="30" data-i18n="rem_30"></option>
+            <option value="60" data-i18n="rem_60"></option>
+          </select>
+        </div>
+        <p class="hint" data-i18n="tz_note"></p>
+      </section>
+
+      <section class="card" aria-labelledby="h-course">
+        <h2 id="h-course"><span class="step">2</span><span data-i18n="step2"></span></h2>
+        <form id="courseForm" novalidate>
+          <div class="row two">
+            <div class="field">
+              <label class="lbl" for="fCode" data-i18n="f_code"></label>
+              <input type="text" id="fCode" maxlength="24" placeholder="CPRG 211" autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="lbl" for="fType" data-i18n="f_type"></label>
+              <select id="fType">
+                <option value="lecture" data-i18n="type_lecture"></option>
+                <option value="lab" data-i18n="type_lab"></option>
+                <option value="tutorial" data-i18n="type_tutorial"></option>
+                <option value="exam" data-i18n="type_exam"></option>
+                <option value="other" data-i18n="type_other"></option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="lbl" for="fName" data-i18n="f_name"></label>
+            <input type="text" id="fName" maxlength="80" data-i18n-ph="ph_name" autocomplete="off">
+          </div>
+
+          <div class="field">
+            <span class="lbl" data-i18n="f_repeat"></span>
+            <div class="seg" role="radiogroup">
+              <label><input type="radio" name="mode" value="weekly" checked><span data-i18n="mode_weekly"></span></label>
+              <label><input type="radio" name="mode" value="once"><span data-i18n="mode_once"></span></label>
+            </div>
+          </div>
+
+          <div id="weeklyBox">
+            <div class="field">
+              <span class="lbl" data-i18n="f_days"></span>
+              <div class="days" id="dayPick"></div>
+            </div>
+            <details class="sub" id="rangeDetails">
+              <summary data-i18n="f_range"></summary>
+              <div class="inner">
+                <p class="hint" data-i18n="f_range_hint" style="margin-bottom:8px;"></p>
+                <div class="row two">
+                  <div><label class="lbl" for="fFrom" data-i18n="f_from"></label><input type="date" id="fFrom"></div>
+                  <div><label class="lbl" for="fTo" data-i18n="f_to"></label><input type="date" id="fTo"></div>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <div id="onceBox" hidden>
+            <div class="field">
+              <label class="lbl" for="fDate" data-i18n="f_date"></label>
+              <input type="date" id="fDate">
+            </div>
+          </div>
+
+          <div class="row two">
+            <div class="field">
+              <label class="lbl" for="fStart" data-i18n="f_start"></label>
+              <input type="time" id="fStart" value="09:00">
+            </div>
+            <div class="field">
+              <label class="lbl" for="fEnd" data-i18n="f_end"></label>
+              <input type="time" id="fEnd" value="10:00">
+            </div>
+          </div>
+
+          <div class="row two">
+            <div class="field">
+              <label class="lbl" for="fLoc" data-i18n="f_loc"></label>
+              <input type="text" id="fLoc" maxlength="80" data-i18n-ph="ph_loc" autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="lbl" for="fInst" data-i18n="f_inst"></label>
+              <input type="text" id="fInst" maxlength="80" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="lbl" data-i18n="f_color"></span>
+            <div class="swatches" id="colorPick" role="radiogroup"></div>
+          </div>
+
+          <p class="err" id="formErr" role="alert" hidden></p>
+          <div class="actions">
+            <button type="submit" class="btn primary" id="submitBtn" data-i18n="btn_add"></button>
+            <button type="button" class="btn" id="cancelEdit" data-i18n="btn_cancel" hidden></button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="h-list">
+        <h2 id="h-list"><span id="listTitle"></span></h2>
+        <ul class="course-list" id="courseList"></ul>
+        <div class="empty" id="listEmpty" hidden>
+          <p data-i18n="list_empty"></p>
+          <button type="button" class="btn small" id="loadSample" data-i18n="sample" style="margin-top:10px;"></button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col">
+
+      <section class="card" aria-labelledby="h-grid">
+        <h2 id="h-grid"><span data-i18n="grid_title"></span></h2>
+        <div id="conflicts" class="conflicts" hidden></div>
+        <div id="gridWrap"></div>
+        <div id="onceWrap" hidden>
+          <h3 class="sub-title" data-i18n="once_title"></h3>
+          <ul class="once-list" id="onceList"></ul>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-export">
+        <h2 id="h-export"><span class="step">3</span><span data-i18n="step3"></span></h2>
+        <div class="summary" id="summary"></div>
+
+        <div class="export-grid">
+          <div class="export-box">
+            <h3 data-i18n="exp_file"></h3>
+            <p class="hint" data-i18n="ics_hint"></p>
+            <button type="button" class="btn dark" id="dlIcs" data-i18n="btn_ics"></button>
+          </div>
+          <div class="export-box">
+            <h3 data-i18n="exp_google"></h3>
+            <p class="hint" id="gState"></p>
+            <button type="button" class="btn primary" id="gSync" data-i18n="g_sync"></button>
+            <button type="button" class="btn small danger" id="gRemove" data-i18n="g_remove"></button>
+            <p class="hint" data-i18n="g_hint"></p>
+          </div>
+        </div>
+
+        <div class="status" id="gStatus" role="status" aria-live="polite" hidden></div>
+        <div class="bar" id="gBar" hidden style="margin-top:10px;"><i id="gBarFill"></i></div>
+        <ul class="log" id="gLog" style="margin-top:8px;"></ul>
+
+        <details class="guide" id="guide">
+          <summary data-i18n="g_setup_title"></summary>
+          <p class="hint" data-i18n="g_setup_intro" style="margin-top:8px;"></p>
+          <ol>
+            <li data-i18n-html="g_s1"></li>
+            <li data-i18n-html="g_s2"></li>
+            <li data-i18n-html="g_s3"></li>
+            <li data-i18n-html="g_s4"></li>
+            <li data-i18n-html="g_s5"></li>
+            <li data-i18n-html="g_s6"></li>
+          </ol>
+          <p class="hint" id="originNote"></p>
+          <label class="lbl" for="clientId" style="margin-top:10px;" data-i18n="g_client_label"></label>
+          <div class="client-row">
+            <input type="text" id="clientId" placeholder="123456789-abcdefg.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+            <button type="button" class="btn" id="saveClient" data-i18n="g_client_save"></button>
+          </div>
+        </details>
+      </section>
+
+    </div>
+  </div>
+
+  <p class="foot" data-i18n="unofficial"></p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================================
+     CONFIG
+     Nếu bạn tự host trang này, dán Google OAuth Client ID vào đây để người
+     dùng khác không phải tự cài đặt. Để trống thì mỗi người tự dán vào ô
+     "Google OAuth Client ID" trong phần hướng dẫn.
+     ===================================================================== */
+  var GOOGLE_CLIENT_ID = "879892724247-u00iar93svlt2kt3ftie8ek0tlo5ei13.apps.googleusercontent.com";
+
+  var TZ = "America/Edmonton";            // SAIT, Calgary
+  var STORE_KEY = "sait-timetable-v1";
+  var HOUR_PX = 56;
+  var DAY_MS = 86400000;
+  var DOW_ORDER = [1,2,3,4,5,6,0];        // Mon..Sun
+  var BYDAY = ["SU","MO","TU","WE","TH","FR","SA"];
+  var SCOPES = "openid email profile https://www.googleapis.com/auth/calendar.events";
+  var CAL_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+
+  var PALETTE = [
+    { bg:"#dfe7ff", bd:"#4a6cf7", ink:"#1b2f8f", g:9  },
+    { bg:"#d5f1ee", bd:"#14a89a", ink:"#0b5a52", g:7  },
+    { bg:"#dff1d8", bd:"#4aa33a", ink:"#25581b", g:10 },
+    { bg:"#fbefc4", bd:"#e0a800", ink:"#6b4f00", g:5  },
+    { bg:"#fde0cc", bd:"#ee7a2d", ink:"#7a3508", g:6  },
+    { bg:"#fbd9d9", bd:"#e0473f", ink:"#7a1a15", g:11 },
+    { bg:"#e9dcfa", bd:"#8b5bd6", ink:"#442073", g:3  },
+    { bg:"#fcdcec", bd:"#e0579b", ink:"#7a1b4a", g:4  }
+  ];
+
+  /* ---------------------------- i18n ---------------------------- */
+  var I18N = {
+    vi: {
+      tagline:"Nhập môn học, đưa thẳng vào Google Calendar",
+      unofficial:"Công cụ không chính thức, không liên kết với SAIT.",
+      step1:"Học kỳ", step2:"Thêm môn học", step3:"Xuất lịch",
+      term_start:"Ngày bắt đầu học kỳ", term_end:"Ngày kết thúc học kỳ",
+      term_bad:"Ngày kết thúc phải sau ngày bắt đầu.",
+      breaks:"Ngày nghỉ (không có lớp)",
+      breaks_hint:"Reading week, lễ, nghỉ giữa kỳ... Các buổi hàng tuần rơi vào khoảng này sẽ được bỏ qua.",
+      add_break:"+ Thêm ngày nghỉ", break_from:"Từ ngày", break_to:"Đến ngày (nếu nhiều ngày)", break_remove:"Xoá",
+      reminder:"Nhắc trước khi vào lớp",
+      rem_none:"Không nhắc", rem_10:"10 phút trước", rem_15:"15 phút trước", rem_30:"30 phút trước", rem_60:"1 giờ trước",
+      tz_note:"Mọi giờ học tính theo múi giờ Calgary (America/Edmonton).",
+      f_code:"Mã môn", f_name:"Tên môn", ph_name:"Web Development", f_type:"Loại",
+      type_lecture:"Lecture", type_lab:"Lab", type_tutorial:"Tutorial", type_exam:"Thi / Exam", type_other:"Khác",
+      f_repeat:"Kiểu lặp", mode_weekly:"Hàng tuần", mode_once:"Một lần",
+      f_days:"Các ngày học trong tuần",
+      f_range:"Môn này có khoảng ngày riêng? (tuỳ chọn)",
+      f_range_hint:"Để trống thì dùng ngày của học kỳ. Dùng cho môn chỉ học nửa kỳ.",
+      f_from:"Từ ngày", f_to:"Đến ngày", f_date:"Ngày",
+      f_start:"Bắt đầu", f_end:"Kết thúc",
+      f_loc:"Phòng / địa điểm", ph_loc:"Phòng học hoặc link Zoom", f_inst:"Giảng viên (tuỳ chọn)",
+      f_color:"Màu",
+      btn_add:"Thêm môn", btn_save:"Lưu thay đổi", btn_cancel:"Huỷ sửa",
+      err_name:"Nhập mã môn hoặc tên môn.",
+      err_days:"Chọn ít nhất một ngày trong tuần.",
+      err_date:"Chọn ngày cho buổi học này.",
+      err_time:"Giờ kết thúc phải sau giờ bắt đầu.",
+      err_range:"Ngày kết thúc của môn phải sau ngày bắt đầu.",
+      err_term:"Cần nhập ngày bắt đầu và kết thúc học kỳ ở bước 1 (hoặc khoảng ngày riêng của môn).",
+      err_noclass:"Không có buổi nào rơi vào khoảng ngày đã chọn. Kiểm tra lại ngày học kỳ, ngày nghỉ và thứ trong tuần.",
+      list_title:"Danh sách môn ({n})",
+      list_empty:"Chưa có môn nào. Thêm môn ở trên hoặc xem thử với dữ liệu mẫu.",
+      sample:"Thử với dữ liệu mẫu",
+      edit:"Sửa", del:"Xoá",
+      once_on:"Một lần",
+      grid_title:"Thời khoá biểu tuần",
+      grid_empty:"Thêm môn học để thấy thời khoá biểu hiện ở đây.",
+      once_title:"Sự kiện một lần",
+      conflicts_title:"Có môn bị trùng giờ",
+      conflict_line:"{a} và {b} trùng giờ vào {day}",
+      summary:"{c} môn, {s} buổi học sẽ được tạo.",
+      summary_none:"Chưa có buổi học hợp lệ nào để xuất.",
+      summary_bad:"Chưa có buổi nào hợp lệ: {names}.",
+      exp_file:"Tải file lịch", exp_google:"Google Calendar",
+      btn_ics:"Tải file .ics",
+      ics_hint:"Không cần đăng nhập. Mở bằng Google Calendar (Import), Apple Calendar hoặc Outlook.",
+      g_signin:"Đăng nhập Google", g_signout:"Đăng xuất",
+      g_sync:"Thêm vào Google Calendar", g_remove:"Gỡ khỏi Google Calendar",
+      g_hint:"Sự kiện được thêm vào lịch chính của tài khoản đang đăng nhập. Bấm lại để cập nhật, không bị trùng.",
+      g_state_out:"Chưa đăng nhập.", g_state_in:"Đã đăng nhập: {who}",
+      g_setup_title:"Cài đặt đăng nhập Google (làm một lần)",
+      g_setup_intro:"Google yêu cầu mỗi trang web có một Client ID riêng. Người host trang chỉ cần làm một lần.",
+      g_s1:"Vào <code>console.cloud.google.com</code> và tạo một project mới.",
+      g_s2:"Vào <b>APIs &amp; Services → Library</b>, tìm và bật <b>Google Calendar API</b>.",
+      g_s3:"Vào <b>OAuth consent screen</b>, chọn <b>External</b>, điền tên app. Khi app còn ở chế độ Testing, thêm email của bạn vào mục <b>Test users</b>.",
+      g_s4:"Vào <b>Credentials → Create credentials → OAuth client ID</b>, chọn loại <b>Web application</b>.",
+      g_s5:"Ở <b>Authorized JavaScript origins</b>, thêm origin của trang, ví dụ <code>https://tenban.github.io</code> hoặc <code>http://localhost:8000</code> (không có dấu / ở cuối).",
+      g_s6:"Copy <b>Client ID</b>, dán vào ô bên dưới rồi bấm Lưu.",
+      g_origin:"Origin hiện tại của trang này: {o}",
+      g_file_warn:"Trang đang mở bằng file://, Google sẽ không cho đăng nhập kiểu này. Hãy đưa lên GitHub Pages hoặc chạy bằng localhost.",
+      g_client_label:"Google OAuth Client ID", g_client_save:"Lưu",
+      g_client_saved:"Đã lưu Client ID.",
+      g_need_client:"Chưa có Client ID. Làm theo hướng dẫn bên dưới rồi dán vào ô Client ID.",
+      g_gsi_wait:"Thư viện đăng nhập của Google chưa tải xong, thử lại sau vài giây.",
+      g_gsi_fail:"Không tải được thư viện đăng nhập của Google. Kiểm tra mạng rồi tải lại trang.",
+      g_auth_fail:"Đăng nhập không thành công ({e}).",
+      g_popup_closed:"Cửa sổ đăng nhập đã đóng trước khi hoàn tất.",
+      g_progress:"Đang thêm {i}/{n}: {name}",
+      g_done:"Xong. {ok} môn đã được thêm hoặc cập nhật trong Google Calendar.",
+      g_done_err:"{ok} môn thành công, {bad} môn lỗi. Xem chi tiết bên dưới.",
+      g_removed:"Đã gỡ {n} môn khỏi Google Calendar.",
+      g_nothing_remove:"Chưa có gì để gỡ.",
+      g_expired:"Phiên đăng nhập đã hết hạn. Bấm lại nút để đăng nhập.",
+      g_api_hint:"Nếu lỗi nói về Calendar API, hãy chắc chắn đã bật Google Calendar API cho project.",
+      day_short:["CN","T2","T3","T4","T5","T6","T7"],
+      day_long:["Chủ nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"],
+      ev_instr:"Giảng viên: {x}", ev_type_lecture:"Lecture", ev_type_lab:"Lab", ev_type_tutorial:"Tutorial", ev_type_exam:"Exam"
+    },
+    en: {
+      tagline:"Enter your classes, send them straight to Google Calendar",
+      unofficial:"Unofficial tool, not affiliated with SAIT.",
+      step1:"Term", step2:"Add a course", step3:"Export",
+      term_start:"Term start date", term_end:"Term end date",
+      term_bad:"The end date must be after the start date.",
+      breaks:"Days off (no classes)",
+      breaks_hint:"Reading week, holidays, breaks. Weekly classes that fall in these ranges are skipped.",
+      add_break:"+ Add days off", break_from:"From", break_to:"To (if several days)", break_remove:"Remove",
+      reminder:"Reminder before class",
+      rem_none:"No reminder", rem_10:"10 min before", rem_15:"15 min before", rem_30:"30 min before", rem_60:"1 hour before",
+      tz_note:"All times use Calgary time (America/Edmonton).",
+      f_code:"Course code", f_name:"Course name", ph_name:"Web Development", f_type:"Type",
+      type_lecture:"Lecture", type_lab:"Lab", type_tutorial:"Tutorial", type_exam:"Exam", type_other:"Other",
+      f_repeat:"Repeat", mode_weekly:"Weekly", mode_once:"One time",
+      f_days:"Days of the week",
+      f_range:"Does this course have its own dates? (optional)",
+      f_range_hint:"Leave empty to use the term dates. Useful for half-term courses.",
+      f_from:"From", f_to:"To", f_date:"Date",
+      f_start:"Start", f_end:"End",
+      f_loc:"Room / location", ph_loc:"Room or Zoom link", f_inst:"Instructor (optional)",
+      f_color:"Colour",
+      btn_add:"Add course", btn_save:"Save changes", btn_cancel:"Cancel edit",
+      err_name:"Enter a course code or a course name.",
+      err_days:"Pick at least one day of the week.",
+      err_date:"Pick a date for this session.",
+      err_time:"The end time must be after the start time.",
+      err_range:"The course end date must be after its start date.",
+      err_term:"Set the term start and end dates in step 1 (or give this course its own dates).",
+      err_noclass:"No session falls inside the chosen dates. Check the term dates, days off and weekdays.",
+      list_title:"Courses ({n})",
+      list_empty:"No courses yet. Add one above or try the sample data.",
+      sample:"Try sample data",
+      edit:"Edit", del:"Delete",
+      once_on:"One time",
+      grid_title:"Weekly timetable",
+      grid_empty:"Add a course and your timetable shows up here.",
+      once_title:"One-time events",
+      conflicts_title:"Some classes overlap",
+      conflict_line:"{a} and {b} overlap on {day}",
+      summary:"{c} courses, {s} sessions will be created.",
+      summary_none:"No valid sessions to export yet.",
+      summary_bad:"No valid sessions for: {names}.",
+      exp_file:"Calendar file", exp_google:"Google Calendar",
+      btn_ics:"Download .ics file",
+      ics_hint:"No sign-in needed. Import it into Google Calendar, Apple Calendar or Outlook.",
+      g_signin:"Sign in with Google", g_signout:"Sign out",
+      g_sync:"Add to Google Calendar", g_remove:"Remove from Google Calendar",
+      g_hint:"Events go to the primary calendar of the signed-in account. Run it again to update, no duplicates.",
+      g_state_out:"Not signed in.", g_state_in:"Signed in as {who}",
+      g_setup_title:"Google sign-in setup (one time)",
+      g_setup_intro:"Google needs a Client ID for each website. Whoever hosts this page only does it once.",
+      g_s1:"Go to <code>console.cloud.google.com</code> and create a new project.",
+      g_s2:"Open <b>APIs &amp; Services → Library</b>, find and enable <b>Google Calendar API</b>.",
+      g_s3:"Open <b>OAuth consent screen</b>, choose <b>External</b> and fill in an app name. While the app is in Testing, add your email under <b>Test users</b>.",
+      g_s4:"Open <b>Credentials → Create credentials → OAuth client ID</b> and pick <b>Web application</b>.",
+      g_s5:"Under <b>Authorized JavaScript origins</b> add this page's origin, for example <code>https://yourname.github.io</code> or <code>http://localhost:8000</code> (no trailing slash).",
+      g_s6:"Copy the <b>Client ID</b>, paste it below and press Save.",
+      g_origin:"This page's origin: {o}",
+      g_file_warn:"This page is opened from file://, and Google refuses sign-in that way. Host it on GitHub Pages or run it on localhost.",
+      g_client_label:"Google OAuth Client ID", g_client_save:"Save",
+      g_client_saved:"Client ID saved.",
+      g_need_client:"No Client ID yet. Follow the setup steps below and paste it in the Client ID box.",
+      g_gsi_wait:"Google's sign-in library is still loading, try again in a few seconds.",
+      g_gsi_fail:"Could not load Google's sign-in library. Check your connection and reload.",
+      g_auth_fail:"Sign-in failed ({e}).",
+      g_popup_closed:"The sign-in window was closed before finishing.",
+      g_progress:"Adding {i}/{n}: {name}",
+      g_done:"Done. {ok} courses were added or updated in Google Calendar.",
+      g_done_err:"{ok} courses succeeded, {bad} failed. See details below.",
+      g_removed:"Removed {n} courses from Google Calendar.",
+      g_nothing_remove:"Nothing to remove yet.",
+      g_expired:"Your sign-in expired. Press the button to sign in again.",
+      g_api_hint:"If the error mentions the Calendar API, make sure Google Calendar API is enabled for the project.",
+      day_short:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
+      day_long:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+      ev_instr:"Instructor: {x}", ev_type_lecture:"Lecture", ev_type_lab:"Lab", ev_type_tutorial:"Tutorial", ev_type_exam:"Exam"
+    }
+  };
+
+  /* ---------------------------- state ---------------------------- */
+  function defaultState(){
+    return { lang:"vi", term:{ start:"", end:"", excluded:[] }, reminder:"15", courses:[], syncedIds:[], clientId:"" };
+  }
+  var state = defaultState();
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(!raw) return;
+      var o = JSON.parse(raw);
+      state = Object.assign(defaultState(), o);
+      state.term = Object.assign({ start:"", end:"", excluded:[] }, o.term || {});
+      if(!Array.isArray(state.term.excluded)) state.term.excluded = [];
+      if(!Array.isArray(state.courses)) state.courses = [];
+      if(!Array.isArray(state.syncedIds)) state.syncedIds = [];
+    }catch(e){ /* storage unavailable or corrupt, start fresh */ }
+  }
+  function save(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  /* ---------------------------- helpers ---------------------------- */
+  function $(sel){ return document.querySelector(sel); }
+  function $$(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c];
+    });
+  }
+  function t(key, vars){
+    var dict = I18N[state.lang] || I18N.vi;
+    var s = dict[key];
+    if(s === undefined) s = I18N.vi[key];
+    if(s === undefined) return key;
+    if(typeof s !== "string") return s;
+    if(vars) Object.keys(vars).forEach(function(k){ s = s.split("{" + k + "}").join(vars[k]); });
+    return s;
+  }
+  function pad(n){ return (n < 10 ? "0" : "") + n; }
+  function isDate(s){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(s || "")) return false;
+    var y = Number(s.slice(0,4));
+    return y >= 2000 && y <= 2100 && !isNaN(parseISO(s));
+  }
+  function parseISO(s){ var p = s.split("-").map(Number); return Date.UTC(p[0], p[1]-1, p[2]); }
+  function fmtISO(ms){ var d = new Date(ms); return d.getUTCFullYear() + "-" + pad(d.getUTCMonth()+1) + "-" + pad(d.getUTCDate()); }
+  function fmtDate(iso){
+    if(!isDate(iso)) return "";
+    try{
+      return state.lang === "vi"
+        ? iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/" + iso.slice(0, 4)
+        : new Date(parseISO(iso)).toLocaleDateString("en-CA", { timeZone:"UTC", day:"numeric", month:"short", year:"numeric" });
+    }catch(e){ return iso; }
+  }
+  function toMin(hhmm){ var p = hhmm.split(":"); return Number(p[0]) * 60 + Number(p[1]); }
+  function hhmm(v){ return (v || "").slice(0,5); }
+  function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+  function newGid(){
+    var alphabet = "0123456789abcdefghijklmnopqrstuv", out = "sait";
+    var buf = new Uint8Array(24);
+    (window.crypto || window.msCrypto).getRandomValues(buf);
+    for(var i = 0; i < buf.length; i++) out += alphabet[buf[i] % 32];
+    return out;
+  }
+  function typeLabel(type){
+    var k = "ev_type_" + type;
+    var dict = I18N[state.lang];
+    return dict[k] || "";
+  }
+  function courseTitle(c){
+    return [c.code, c.name].filter(Boolean).join(" ") || c.code || c.name || "?";
+  }
+  function eventSummary(c){
+    var tl = typeLabel(c.type);
+    return courseTitle(c) + (tl ? " (" + tl + ")" : "");
+  }
+  function eventDescription(c){
+    return c.instructor ? t("ev_instr", { x:c.instructor }) : "";
+  }
+  function sortedDays(c){
+    return DOW_ORDER.filter(function(d){ return c.days.indexOf(d) !== -1; });
+  }
+
+  /* ------------------- schedule logic (dates) ------------------- */
+  function effectiveRange(c){
+    return { start: c.startDate || state.term.start, end: c.endDate || state.term.end };
+  }
+  function isExcluded(iso){
+    return state.term.excluded.some(function(r){
+      if(!isDate(r.from)) return false;
+      var to = isDate(r.to) && r.to >= r.from ? r.to : r.from;
+      return iso >= r.from && iso <= to;
+    });
+  }
+  function rawDates(c){
+    if(c.mode === "once") return isDate(c.date) ? [c.date] : [];
+    var r = effectiveRange(c);
+    if(!isDate(r.start) || !isDate(r.end)) return [];
+    var s = parseISO(r.start), e = parseISO(r.end);
+    if(e < s || (e - s) / DAY_MS > 400) return [];
+    var out = [];
+    for(var ms = s; ms <= e; ms += DAY_MS){
+      if(c.days.indexOf(new Date(ms).getUTCDay()) !== -1) out.push(fmtISO(ms));
+    }
+    return out;
+  }
+  function plan(c){
+    var raw = rawDates(c);
+    var keep = c.mode === "once" ? raw : raw.filter(function(d){ return !isExcluded(d); });
+    if(!keep.length) return null;
+    var first = keep[0];
+    var inst = raw.filter(function(d){ return d >= first; });
+    var ex = c.mode === "once" ? [] : inst.filter(isExcluded);
+    return { first:first, count:inst.length, exdates:ex, sessions:keep.length };
+  }
+  function findConflicts(){
+    var weekly = state.courses.filter(function(c){ return c.mode === "weekly"; });
+    var out = [];
+    for(var i = 0; i < weekly.length; i++){
+      for(var j = i + 1; j < weekly.length; j++){
+        var a = weekly[i], b = weekly[j];
+        var shared = a.days.filter(function(d){ return b.days.indexOf(d) !== -1; });
+        if(!shared.length) continue;
+        var ra = effectiveRange(a), rb = effectiveRange(b);
+        var as = ra.start || "0000-00-00", ae = ra.end || "9999-99-99";
+        var bs = rb.start || "0000-00-00", be = rb.end || "9999-99-99";
+        if(as > be || bs > ae) continue;
+        var s1 = toMin(a.start), e1 = toMin(a.end), s2 = toMin(b.start), e2 = toMin(b.end);
+        if(!(s1 < e2 && s2 < e1)) continue;
+        out.push({ a:a, b:b, days:shared });
+      }
+    }
+    return out;
+  }
+
+  /* ---------------------------- i18n apply ---------------------------- */
+  function applyI18n(){
+    document.documentElement.lang = state.lang;
+    $$("[data-i18n]").forEach(function(el){ el.textContent = t(el.getAttribute("data-i18n")); });
+    $$("[data-i18n-html]").forEach(function(el){ el.innerHTML = t(el.getAttribute("data-i18n-html")); });
+    $$("[data-i18n-ph]").forEach(function(el){ el.placeholder = t(el.getAttribute("data-i18n-ph")); });
+    $$("[data-lang]").forEach(function(b){ b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === state.lang)); });
+    $("#submitBtn").textContent = editingId ? t("btn_save") : t("btn_add");
+  }
+
+  /* ---------------------------- form building ---------------------------- */
+  var editingId = null;
+
+  function buildStaticPickers(){
+    var dp = $("#dayPick");
+    dp.innerHTML = "";
+    DOW_ORDER.forEach(function(d){
+      var label = document.createElement("label");
+      label.innerHTML = '<input type="checkbox" name="day" value="' + d + '"><span></span>';
+      dp.appendChild(label);
+    });
+    refreshDayLabels();
+    var cp = $("#colorPick");
+    cp.innerHTML = "";
+    PALETTE.forEach(function(p, i){
+      var label = document.createElement("label");
+      label.style.setProperty("--c-bd", p.bd);
+      label.innerHTML = '<input type="radio" name="color" value="' + i + '"' + (i === 0 ? " checked" : "") + ' aria-label="' + (i+1) + '"><span></span>';
+      cp.appendChild(label);
+    });
+  }
+  function refreshDayLabels(){
+    var names = t("day_short");
+    $$("#dayPick label").forEach(function(label, idx){
+      label.querySelector("span").textContent = names[DOW_ORDER[idx]];
+    });
+  }
+  function setMode(mode){
+    $("#weeklyBox").hidden = mode !== "weekly";
+    $("#onceBox").hidden = mode !== "once";
+  }
+  function showFormErr(msgKey){
+    var el = $("#formErr");
+    if(!msgKey){ el.hidden = true; el.textContent = ""; return; }
+    el.hidden = false; el.textContent = t(msgKey);
+  }
+  function resetForm(){
+    editingId = null;
+    var f = $("#courseForm");
+    f.reset();
+    $("#fStart").value = "09:00";
+    $("#fEnd").value = "10:00";
+    $$("#dayPick input").forEach(function(i){ i.checked = false; });
+    $("#rangeDetails").open = false;
+    var nextColor = state.courses.length % PALETTE.length;
+    $$("#colorPick input").forEach(function(i){ i.checked = Number(i.value) === nextColor; });
+    setMode("weekly");
+    $("#cancelEdit").hidden = true;
+    $("#submitBtn").textContent = t("btn_add");
+    showFormErr(null);
+  }
+  function readForm(){
+    var f = $("#courseForm");
+    var mode = f.elements["mode"].value;
+    var colorEl = f.querySelector('input[name="color"]:checked');
+    return {
+      code: $("#fCode").value.trim(),
+      name: $("#fName").value.trim(),
+      type: $("#fType").value,
+      mode: mode,
+      days: $$("#dayPick input:checked").map(function(i){ return Number(i.value); }),
+      startDate: $("#fFrom").value,
+      endDate: $("#fTo").value,
+      date: $("#fDate").value,
+      start: hhmm($("#fStart").value),
+      end: hhmm($("#fEnd").value),
+      location: $("#fLoc").value.trim(),
+      instructor: $("#fInst").value.trim(),
+      color: colorEl ? Number(colorEl.value) : 0
+    };
+  }
+  function validateCourse(c){
+    if(!c.code && !c.name) return "err_name";
+    if(!/^\d{2}:\d{2}$/.test(c.start) || !/^\d{2}:\d{2}$/.test(c.end) || toMin(c.end) <= toMin(c.start)) return "err_time";
+    if(c.mode === "weekly"){
+      if(!c.days.length) return "err_days";
+      if(c.startDate && c.endDate && c.endDate < c.startDate) return "err_range";
+      var r = effectiveRange(c);
+      if(!isDate(r.start) || !isDate(r.end)) return "err_term";
+      if(r.end < r.start) return "term_bad";
+    } else if(!isDate(c.date)){
+      return "err_date";
+    }
+    if(!plan(c)) return "err_noclass";
+    return null;
+  }
+  function fillForm(c){
+    $("#fCode").value = c.code;
+    $("#fName").value = c.name;
+    $("#fType").value = c.type;
+    $("#courseForm").querySelector('input[name="mode"][value="' + c.mode + '"]').checked = true;
+    setMode(c.mode);
+    $$("#dayPick input").forEach(function(i){ i.checked = c.days.indexOf(Number(i.value)) !== -1; });
+    $("#fFrom").value = c.startDate || "";
+    $("#fTo").value = c.endDate || "";
+    $("#rangeDetails").open = !!(c.startDate || c.endDate);
+    $("#fDate").value = c.date || "";
+    $("#fStart").value = c.start;
+    $("#fEnd").value = c.end;
+    $("#fLoc").value = c.location || "";
+    $("#fInst").value = c.instructor || "";
+    $$("#colorPick input").forEach(function(i){ i.checked = Number(i.value) === c.color; });
+  }
+  function startEdit(id){
+    var c = state.courses.filter(function(x){ return x.id === id; })[0];
+    if(!c) return;
+    editingId = id;
+    fillForm(c);
+    $("#submitBtn").textContent = t("btn_save");
+    $("#cancelEdit").hidden = false;
+    showFormErr(null);
+    $("#courseForm").scrollIntoView({ behavior:"smooth", block:"center" });
+    $("#fCode").focus({ preventScroll:true });
+  }
+
+  /* ---------------------------- renderers ---------------------------- */
+  function renderBreaks(){
+    var wrap = $("#breakList");
+    wrap.innerHTML = "";
+    state.term.excluded.forEach(function(r, i){
+      var row = document.createElement("div");
+      row.className = "break-row";
+      row.innerHTML =
+        '<div><label class="lbl">' + esc(t("break_from")) + '</label><input type="date" data-i="' + i + '" data-k="from" value="' + esc(r.from || "") + '"></div>' +
+        '<div><label class="lbl">' + esc(t("break_to")) + '</label><input type="date" data-i="' + i + '" data-k="to" value="' + esc(r.to || "") + '"></div>' +
+        '<button type="button" class="x" data-rmbreak="' + i + '" aria-label="' + esc(t("break_remove")) + '">×</button>';
+      wrap.appendChild(row);
+    });
+  }
+  function renderTermMsg(){
+    var el = $("#termMsg");
+    var bad = isDate(state.term.start) && isDate(state.term.end) && state.term.end < state.term.start;
+    el.hidden = !bad;
+    el.textContent = bad ? t("term_bad") : "";
+  }
+  function courseMeta(c){
+    var parts = [];
+    if(c.mode === "weekly"){
+      parts.push(sortedDays(c).map(function(d){ return t("day_short")[d]; }).join(", "));
+    } else {
+      parts.push(fmtDate(c.date) || t("once_on"));
+    }
+    return parts.join("") + " · " + c.start + "–" + c.end;
+  }
+  function renderList(){
+    var ul = $("#courseList");
+    $("#listTitle").textContent = t("list_title", { n:state.courses.length });
+    $("#listEmpty").hidden = state.courses.length > 0;
+    ul.hidden = state.courses.length === 0;
+    ul.innerHTML = state.courses.map(function(c){
+      var col = PALETTE[c.color % PALETTE.length];
+      var tl = typeLabel(c.type);
+      var rangeLine = "";
+      if(c.mode === "weekly" && (c.startDate || c.endDate)){
+        var r = effectiveRange(c);
+        if(isDate(r.start) && isDate(r.end)) rangeLine = '<div class="cmeta">' + esc(fmtDate(r.start)) + ' → ' + esc(fmtDate(r.end)) + '</div>';
+      }
+      return '<li class="course" style="--c-bd:' + col.bd + ';--c-bg:' + col.bg + ';--c-ink:' + col.ink + '">' +
+        '<span class="dot"></span>' +
+        '<div><b>' + esc(courseTitle(c)) + '</b>' + (tl ? '<span class="chip">' + esc(tl) + '</span>' : '') +
+        '<div class="cmeta mono">' + esc(courseMeta(c)) + '</div>' +
+        (c.location ? '<div class="cmeta">' + esc(c.location) + '</div>' : '') +
+        rangeLine + '</div>' +
+        '<div class="cact"><button type="button" class="btn small" data-edit="' + c.id + '">' + esc(t("edit")) + '</button>' +
+        '<button type="button" class="btn small danger" data-del="' + c.id + '">' + esc(t("del")) + '</button></div></li>';
+    }).join("");
+  }
+  function layoutDay(items){
+    items.sort(function(a,b){ return a.s - b.s || a.e - b.e; });
+    var out = [], cluster = [], clusterEnd = -1;
+    function flush(){
+      if(!cluster.length) return;
+      var lanes = [];
+      cluster.forEach(function(it){
+        var l = -1;
+        for(var k = 0; k < lanes.length; k++){ if(lanes[k] <= it.s){ l = k; break; } }
+        if(l === -1){ l = lanes.length; lanes.push(it.e); } else { lanes[l] = it.e; }
+        it.lane = l;
+      });
+      cluster.forEach(function(it){ it.lanes = lanes.length; out.push(it); });
+      cluster = [];
+    }
+    items.forEach(function(it){
+      if(cluster.length && it.s >= clusterEnd){ flush(); clusterEnd = -1; }
+      cluster.push(it);
+      clusterEnd = Math.max(clusterEnd, it.e);
+    });
+    flush();
+    return out;
+  }
+  function renderGrid(){
+    var wrap = $("#gridWrap");
+    var weekly = state.courses.filter(function(c){ return c.mode === "weekly" && c.days.length; });
+    var conflicts = findConflicts();
+    var conflictIds = {};
+    conflicts.forEach(function(x){ x.days.forEach(function(d){ conflictIds[x.a.id + ":" + d] = true; conflictIds[x.b.id + ":" + d] = true; }); });
+
+    var cbox = $("#conflicts");
+    if(conflicts.length){
+      cbox.hidden = false;
+      cbox.innerHTML = "<b>" + esc(t("conflicts_title")) + "</b><ul>" + conflicts.map(function(x){
+        var days = DOW_ORDER.filter(function(d){ return x.days.indexOf(d) !== -1; }).map(function(d){ return t("day_long")[d]; }).join(", ");
+        return "<li>" + esc(t("conflict_line", { a:courseTitle(x.a), b:courseTitle(x.b), day:days })) + "</li>";
+      }).join("") + "</ul>";
+    } else { cbox.hidden = true; cbox.innerHTML = ""; }
+
+    if(!weekly.length){
+      wrap.innerHTML = '<div class="empty">' + esc(t("grid_empty")) + "</div>";
+    } else {
+      var minM = Infinity, maxM = -Infinity;
+      weekly.forEach(function(c){ minM = Math.min(minM, toMin(c.start)); maxM = Math.max(maxM, toMin(c.end)); });
+      var startH = Math.floor(minM / 60), endH = Math.ceil(maxM / 60);
+      if(endH - startH < 8) endH = Math.min(24, startH + 8);
+      if(endH - startH < 8) startH = Math.max(0, endH - 8);
+      var usesWeekend = { 6:false, 0:false };
+      weekly.forEach(function(c){ if(c.days.indexOf(6) !== -1) usesWeekend[6] = true; if(c.days.indexOf(0) !== -1) usesWeekend[0] = true; });
+      var cols = DOW_ORDER.filter(function(d){ return (d !== 6 && d !== 0) || usesWeekend[d]; });
+      var totalH = (endH - startH) * HOUR_PX;
+      var names = t("day_short");
+
+      var head = '<div class="tt-head" style="--ncols:' + cols.length + '"><div></div>' +
+        cols.map(function(d){ return "<div>" + esc(names[d]) + "</div>"; }).join("") + "</div>";
+      var times = "";
+      times += '<span class="first" style="top:2px">' + pad(startH) + ":00</span>";
+      for(var h = startH + 1; h < endH; h++){
+        times += '<span style="top:' + ((h - startH) * HOUR_PX) + 'px">' + pad(h) + ":00</span>";
+      }
+      var body = '<div class="tt-body" style="--ncols:' + cols.length + ';--hour:' + HOUR_PX + 'px;height:' + totalH + 'px">' +
+        '<div class="tt-times">' + times + "</div>";
+      cols.forEach(function(d){
+        var items = weekly.filter(function(c){ return c.days.indexOf(d) !== -1; }).map(function(c){
+          return { c:c, s:toMin(c.start), e:toMin(c.end) };
+        });
+        var laid = layoutDay(items);
+        body += '<div class="tt-col">' + laid.map(function(it){
+          var c = it.c, col = PALETTE[c.color % PALETTE.length];
+          var top = (it.s - startH * 60) * HOUR_PX / 60;
+          var height = Math.max(22, (it.e - it.s) * HOUR_PX / 60 - 2);
+          var left = "calc(" + it.lane + " * 100% / " + it.lanes + " + 2px)";
+          var width = "calc(100% / " + it.lanes + " - 4px)";
+          var meta = c.start + "–" + c.end + (c.location ? " · " + c.location : "");
+          return '<button type="button" class="ev' + (conflictIds[c.id + ":" + d] ? " conflict" : "") + '" data-edit="' + c.id + '" ' +
+            'style="top:' + top + "px;height:" + height + "px;left:" + left + ";width:" + width + ";--c-bg:" + col.bg + ";--c-bd:" + col.bd + ";--c-ink:" + col.ink + '" ' +
+            'title="' + esc(eventSummary(c) + " " + meta) + '">' +
+            "<b>" + esc(c.code || c.name) + "</b>" +
+            (c.code && c.name ? '<span class="n">' + esc(c.name) + "</span>" : "") +
+            '<span class="m">' + esc(meta) + "</span></button>";
+        }).join("") + "</div>";
+      });
+      body += "</div>";
+      wrap.innerHTML = '<div class="tt-scroll"><div class="tt">' + head + body + "</div></div>";
+    }
+
+    // one-time events
+    var once = state.courses.filter(function(c){ return c.mode === "once"; })
+      .sort(function(a,b){ return (a.date + a.start) < (b.date + b.start) ? -1 : 1; });
+    $("#onceWrap").hidden = once.length === 0;
+    $("#onceList").innerHTML = once.map(function(c){
+      var col = PALETTE[c.color % PALETTE.length];
+      return '<li style="--c-bd:' + col.bd + ";--c-bg:" + col.bg + ";--c-ink:" + col.ink + '">' +
+        "<b>" + esc(courseTitle(c)) + "</b>" +
+        '<span class="when">' + esc(fmtDate(c.date)) + " · " + c.start + "–" + c.end + "</span>" +
+        '<button type="button" class="btn small" data-edit="' + c.id + '">' + esc(t("edit")) + "</button></li>";
+    }).join("");
+  }
+  function totals(){
+    var courses = 0, sessions = 0, bad = [];
+    state.courses.forEach(function(c){
+      var p = plan(c);
+      if(p){ courses++; sessions += p.sessions; } else { bad.push(courseTitle(c)); }
+    });
+    return { courses:courses, sessions:sessions, bad:bad };
+  }
+  function renderSummary(){
+    var tt = totals();
+    var el = $("#summary");
+    if(tt.courses){
+      el.className = "summary";
+      el.textContent = t("summary", { c:tt.courses, s:tt.sessions }) + (tt.bad.length ? " " + t("summary_bad", { names:tt.bad.join(", ") }) : "");
+    } else {
+      el.className = "summary empty-s";
+      el.textContent = state.courses.length && tt.bad.length ? t("summary_bad", { names:tt.bad.join(", ") }) : t("summary_none");
+    }
+    $("#dlIcs").disabled = tt.courses === 0;
+    $("#gSync").disabled = syncing || (tt.courses === 0 && state.syncedIds.length === 0);
+    $("#gRemove").disabled = syncing || state.syncedIds.length === 0;
+  }
+  function renderAll(){
+    renderList();
+    renderGrid();
+    renderSummary();
+    renderTermMsg();
+  }
+
+  /* ---------------------------- ICS export ---------------------------- */
+  var VTIMEZONE = [
+    "BEGIN:VTIMEZONE","TZID:America/Edmonton",
+    "BEGIN:DAYLIGHT","TZOFFSETFROM:-0700","TZOFFSETTO:-0600","TZNAME:MDT","DTSTART:20070311T020000","RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU","END:DAYLIGHT",
+    "BEGIN:STANDARD","TZOFFSETFROM:-0600","TZOFFSETTO:-0700","TZNAME:MST","DTSTART:20071104T020000","RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU","END:STANDARD",
+    "END:VTIMEZONE"
+  ];
+  function icsEscape(s){
+    return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  }
+  function fold(line){
+    var enc = new TextEncoder();
+    var out = "", cur = "", bytes = 0;
+    for(var ch of line){
+      var b = enc.encode(ch).length;
+      if(bytes + b > 74){ out += cur + "\r\n "; cur = ""; bytes = 1; }
+      cur += ch; bytes += b;
+    }
+    return out + cur;
+  }
+  function compact(iso){ return iso.replace(/-/g, ""); }
+  function compactTime(v){ return v.replace(":", "") + "00"; }
+  function bydayRule(c){ return sortedDays(c).map(function(d){ return BYDAY[d]; }).join(","); }
+
+  function buildICS(){
+    var stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    var L = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SAIT Timetable//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:SAIT Timetable","X-WR-TIMEZONE:" + TZ];
+    L = L.concat(VTIMEZONE);
+    state.courses.forEach(function(c){
+      var p = plan(c);
+      if(!p) return;
+      L.push("BEGIN:VEVENT", "UID:" + c.gid + "@sait-timetable", "DTSTAMP:" + stamp,
+        "DTSTART;TZID=" + TZ + ":" + compact(p.first) + "T" + compactTime(c.start),
+        "DTEND;TZID=" + TZ + ":" + compact(p.first) + "T" + compactTime(c.end));
+      if(c.mode === "weekly" && p.count > 1){
+        L.push("RRULE:FREQ=WEEKLY;BYDAY=" + bydayRule(c) + ";COUNT=" + p.count);
+        if(p.exdates.length){
+          L.push("EXDATE;TZID=" + TZ + ":" + p.exdates.map(function(d){ return compact(d) + "T" + compactTime(c.start); }).join(","));
+        }
+      }
+      L.push("SUMMARY:" + icsEscape(eventSummary(c)));
+      if(c.location) L.push("LOCATION:" + icsEscape(c.location));
+      var d = eventDescription(c);
+      if(d) L.push("DESCRIPTION:" + icsEscape(d));
+      if(state.reminder !== "none"){
+        L.push("BEGIN:VALARM", "TRIGGER:-PT" + state.reminder + "M", "ACTION:DISPLAY", "DESCRIPTION:" + icsEscape(eventSummary(c)), "END:VALARM");
+      }
+      L.push("END:VEVENT");
+    });
+    L.push("END:VCALENDAR");
+    return L.map(fold).join("\r\n") + "\r\n";
+  }
+  function downloadICS(){
+    var blob = new Blob([buildICS()], { type:"text/calendar;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "sait-timetable.ics";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------------------------- Google ---------------------------- */
+  var gToken = null, gTokenExp = 0, gUser = null, gClient = null, gClientFor = "";
+  var gsiState = "loading";   // loading | ready | failed
+  var pendingAfterAuth = null;
+  var syncing = false;
+  var GLOGO = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+
+  function clientId(){ return (state.clientId || GOOGLE_CLIENT_ID || "").trim(); }
+
+  function loadGsi(){
+    if(window.google && google.accounts && google.accounts.oauth2){ gsiState = "ready"; return; }
+    var s = document.createElement("script");
+    s.src = "https://accounts.google.com/gsi/client";
+    s.async = true;
+    s.onload = function(){
+      gsiState = (window.google && google.accounts && google.accounts.oauth2) ? "ready" : "failed";
+      renderGoogle();
+    };
+    s.onerror = function(){ gsiState = "failed"; renderGoogle(); };
+    document.head.appendChild(s);
+  }
+  function setStatus(msg, kind){
+    var el = $("#gStatus");
+    if(!msg){ el.hidden = true; el.textContent = ""; return; }
+    el.hidden = false;
+    el.className = "status" + (kind ? " " + kind : "");
+    el.textContent = msg;
+  }
+  function setProgress(pct){
+    var bar = $("#gBar");
+    if(pct === null){ bar.hidden = true; return; }
+    bar.hidden = false;
+    $("#gBarFill").style.width = pct + "%";
+  }
+  function getTokenClient(){
+    var id = clientId();
+    if(gClient && gClientFor === id) return gClient;
+    gClientFor = id;
+    gClient = google.accounts.oauth2.initTokenClient({
+      client_id: id,
+      scope: SCOPES,
+      callback: onToken,
+      error_callback: function(err){
+        pendingAfterAuth = null;
+        var type = err && err.type;
+        setStatus(type === "popup_closed" ? t("g_popup_closed") : t("g_auth_fail", { e:(err && (err.message || err.type)) || "error" }), "err");
+      }
+    });
+    return gClient;
+  }
+  function onToken(resp){
+    if(!resp || resp.error){
+      pendingAfterAuth = null;
+      setStatus(t("g_auth_fail", { e:(resp && resp.error) || "error" }), "err");
+      return;
+    }
+    gToken = resp.access_token;
+    gTokenExp = Date.now() + ((resp.expires_in || 3600) - 30) * 1000;
+    fetchUser().then(function(){
+      renderGoogle();
+      var f = pendingAfterAuth; pendingAfterAuth = null;
+      if(f) f();
+    });
+  }
+  function fetchUser(){
+    return fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers:{ Authorization:"Bearer " + gToken } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(u){ gUser = u ? { name:u.name || "", email:u.email || "", picture:u.picture || "" } : { name:"", email:"", picture:"" }; })
+      .catch(function(){ gUser = { name:"", email:"", picture:"" }; });
+  }
+  function requireAuth(after){
+    if(!clientId()){ setStatus(t("g_need_client"), "err"); openGuide(); return; }
+    if(gsiState === "failed"){ setStatus(t("g_gsi_fail"), "err"); return; }
+    if(gsiState !== "ready"){ setStatus(t("g_gsi_wait"), "err"); return; }
+    if(gToken && Date.now() < gTokenExp){ if(after) after(); return; }
+    pendingAfterAuth = after || null;
+    getTokenClient().requestAccessToken({ prompt:"" });
+  }
+  function signOut(){
+    var tok = gToken;
+    gToken = null; gUser = null; gTokenExp = 0;
+    try{ if(tok && window.google) google.accounts.oauth2.revoke(tok, function(){}); }catch(e){}
+    setStatus(null);
+    renderGoogle();
+  }
+  function openGuide(){
+    var g = $("#guide");
+    g.open = true;
+    g.scrollIntoView({ behavior:"smooth", block:"center" });
+  }
+  function renderGoogle(){
+    var h = $("#gHeader");
+    if(gToken && gUser){
+      var who = gUser.name || gUser.email || "";
+      h.innerHTML = '<div class="gchip">' +
+        (gUser.picture ? '<img src="' + esc(gUser.picture) + '" alt="" referrerpolicy="no-referrer">' : "") +
+        "<span>" + esc(who) + '</span><button type="button" class="btn-link" data-act="g-signout">' + esc(t("g_signout")) + "</button></div>";
+    } else {
+      h.innerHTML = '<button type="button" class="btn gbtn" data-act="g-signin">' + GLOGO + "<span>" + esc(t("g_signin")) + "</span></button>";
+    }
+    var st = $("#gState");
+    st.textContent = (gToken && gUser) ? t("g_state_in", { who:(gUser.email || gUser.name || "") }) : t("g_state_out");
+    if(location.protocol === "file:") st.textContent += " " + t("g_file_warn");
+    $("#originNote").textContent = location.protocol === "file:" ? t("g_file_warn") : t("g_origin", { o:location.origin });
+    $("#clientId").value = clientId();
+    if(gsiState === "failed" && !$("#gStatus").textContent) setStatus(t("g_gsi_fail"), "err");
+    renderSummary();
+  }
+
+  function gEventBody(c, p){
+    var body = {
+      id: c.gid,
+      summary: eventSummary(c),
+      location: c.location || undefined,
+      description: eventDescription(c) || undefined,
+      start: { dateTime: p.first + "T" + c.start + ":00", timeZone: TZ },
+      end:   { dateTime: p.first + "T" + c.end + ":00", timeZone: TZ },
+      colorId: String(PALETTE[c.color % PALETTE.length].g),
+      reminders: state.reminder === "none"
+        ? { useDefault:false, overrides:[] }
+        : { useDefault:false, overrides:[{ method:"popup", minutes:Number(state.reminder) }] },
+      extendedProperties: { private:{ saitTimetable:"1" } },
+      status: "confirmed"
+    };
+    if(c.mode === "weekly" && p.count > 1){
+      body.recurrence = ["RRULE:FREQ=WEEKLY;BYDAY=" + bydayRule(c) + ";COUNT=" + p.count];
+      if(p.exdates.length){
+        body.recurrence.push("EXDATE;TZID=" + TZ + ":" + p.exdates.map(function(d){ return compact(d) + "T" + compactTime(c.start); }).join(","));
+      }
+    }
+    return body;
+  }
+  function gcal(method, suffix, body){
+    return fetch(CAL_URL + (suffix || ""), {
+      method: method,
+      headers: { Authorization:"Bearer " + gToken, "Content-Type":"application/json" },
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function(res){
+      if(res.status === 204) return { ok:true, status:204, data:null };
+      return res.json().then(function(d){ return { ok:res.ok, status:res.status, data:d }; }, function(){ return { ok:res.ok, status:res.status, data:null }; });
+    });
+  }
+  function errMsg(r){
+    var m = r && r.data && r.data.error && (r.data.error.message || r.data.error.status);
+    return m || ("HTTP " + (r ? r.status : "?"));
+  }
+  function logLine(text, bad){
+    var li = document.createElement("li");
+    if(bad) li.className = "bad";
+    li.textContent = text;
+    $("#gLog").appendChild(li);
+  }
+
+  async function syncToGoogle(){
+    if(syncing) return;
+    syncing = true; renderSummary();
+    $("#gLog").innerHTML = "";
+    var items = [];
+    state.courses.forEach(function(c){ var p = plan(c); if(p) items.push({ c:c, p:p }); });
+    var pushed = {}, ok = 0, bad = 0, expired = false;
+    try{
+      for(var i = 0; i < items.length; i++){
+        var it = items[i];
+        setStatus(t("g_progress", { i:i + 1, n:items.length, name:courseTitle(it.c) }), "");
+        setProgress(Math.round(i / Math.max(items.length, 1) * 100));
+        var body = gEventBody(it.c, it.p);
+        var r = await gcal("POST", "", body);
+        if(r.status === 409) r = await gcal("PUT", "/" + encodeURIComponent(it.c.gid), body);
+        if(r.status === 401){ expired = true; break; }
+        if(r.ok){ ok++; pushed[it.c.gid] = true; logLine("✓ " + courseTitle(it.c), false); }
+        else { bad++; logLine("✗ " + courseTitle(it.c) + ": " + errMsg(r), true); }
+      }
+      if(expired){
+        gToken = null; gTokenExp = 0;
+        setStatus(t("g_expired"), "err"); renderGoogle();
+        return;
+      }
+      // remove events that were synced before but no longer exist locally
+      var stale = state.syncedIds.filter(function(id){ return !pushed[id]; });
+      var currentIds = {};
+      state.courses.forEach(function(c){ currentIds[c.gid] = true; });
+      var keep = [];
+      for(var j = 0; j < stale.length; j++){
+        var id = stale[j];
+        var stillHere = currentIds[id];
+        if(stillHere){ keep.push(id); continue; }     // course exists but failed this round, keep tracking it
+        var d = await gcal("DELETE", "/" + encodeURIComponent(id));
+        if(!(d.ok || d.status === 404 || d.status === 410)) keep.push(id);
+      }
+      state.syncedIds = Object.keys(pushed).concat(keep);
+      save();
+      setProgress(100);
+      if(bad){ setStatus(t("g_done_err", { ok:ok, bad:bad }) + " " + t("g_api_hint"), "err"); }
+      else { setStatus(t("g_done", { ok:ok }), "ok"); }
+    } catch(e){
+      setStatus(t("g_auth_fail", { e:(e && e.message) || "network" }), "err");
+    } finally {
+      syncing = false; renderSummary();
+      setTimeout(function(){ setProgress(null); }, 1200);
+    }
+  }
+  async function removeFromGoogle(){
+    if(syncing) return;
+    if(!state.syncedIds.length){ setStatus(t("g_nothing_remove"), ""); return; }
+    syncing = true; renderSummary();
+    $("#gLog").innerHTML = "";
+    var removed = 0, left = [], expired = false;
+    try{
+      for(var i = 0; i < state.syncedIds.length; i++){
+        var id = state.syncedIds[i];
+        setProgress(Math.round(i / state.syncedIds.length * 100));
+        var r = await gcal("DELETE", "/" + encodeURIComponent(id));
+        if(r.status === 401){ expired = true; left = state.syncedIds.slice(i); break; }
+        if(r.ok || r.status === 404 || r.status === 410) removed++;
+        else { left.push(id); logLine("✗ " + errMsg(r), true); }
+      }
+      if(expired){ gToken = null; gTokenExp = 0; setStatus(t("g_expired"), "err"); renderGoogle(); }
+      else { setStatus(t("g_removed", { n:removed }), left.length ? "err" : "ok"); }
+      state.syncedIds = left; save();
+    } catch(e){
+      setStatus(t("g_auth_fail", { e:(e && e.message) || "network" }), "err");
+    } finally {
+      syncing = false; setProgress(null); renderSummary();
+    }
+  }
+
+  /* ---------------------------- sample data ---------------------------- */
+  function loadSample(){
+    state.term.start = "2027-01-11";
+    state.term.end = "2027-04-16";
+    state.term.excluded = [{ from:"2027-02-15", to:"2027-02-19" }];
+    function mk(o){
+      return Object.assign({ id:uid(), gid:newGid(), code:"", name:"", type:"lecture", mode:"weekly", days:[], startDate:"", endDate:"", date:"", start:"09:00", end:"10:00", location:"", instructor:"", color:0 }, o);
+    }
+    state.courses = [
+      mk({ code:"DEMO 101", name:"Web Development", type:"lecture", days:[1,3], start:"09:00", end:"10:20", location:"Room 101", color:0 }),
+      mk({ code:"DEMO 101", name:"Web Development", type:"lab", days:[5], start:"13:00", end:"15:00", location:"Lab 12", color:0 }),
+      mk({ code:"DEMO 120", name:"Databases", type:"lecture", days:[2,4], start:"10:30", end:"11:50", location:"Room 204", color:1 }),
+      mk({ code:"DEMO 150", name:"Communications", type:"tutorial", days:[4], start:"14:00", end:"15:00", startDate:"2027-01-11", endDate:"2027-02-26", location:"Room 310", color:3 }),
+      mk({ code:"DEMO 101", name:"Midterm", type:"exam", mode:"once", date:"2027-03-05", start:"09:00", end:"11:00", location:"Gym A", color:5 })
+    ];
+    state.syncedIds = [];
+    save();
+    $("#termStart").value = state.term.start;
+    $("#termEnd").value = state.term.end;
+    renderBreaks();
+    resetForm();
+    renderAll();
+  }
+
+  /* ---------------------------- events ---------------------------- */
+  function wire(){
+    $("#termStart").addEventListener("input", function(e){ state.term.start = e.target.value; save(); renderAll(); });
+    $("#termEnd").addEventListener("input", function(e){ state.term.end = e.target.value; save(); renderAll(); });
+    $("#reminder").addEventListener("change", function(e){ state.reminder = e.target.value; save(); });
+
+    $("#addBreak").addEventListener("click", function(){
+      state.term.excluded.push({ from:"", to:"" });
+      save(); renderBreaks();
+      var inputs = $$("#breakList input");
+      if(inputs.length) inputs[inputs.length - 2].focus();
+    });
+    $("#breakList").addEventListener("input", function(e){
+      var i = e.target.getAttribute("data-i"), k = e.target.getAttribute("data-k");
+      if(i === null) return;
+      state.term.excluded[Number(i)][k] = e.target.value;
+      save(); renderAll();
+    });
+    $("#breakList").addEventListener("click", function(e){
+      var rm = e.target.closest("[data-rmbreak]");
+      if(!rm) return;
+      state.term.excluded.splice(Number(rm.getAttribute("data-rmbreak")), 1);
+      save(); renderBreaks(); renderAll();
+    });
+
+    $("#courseForm").addEventListener("change", function(e){
+      if(e.target.name === "mode") setMode(e.target.value);
+    });
+    $("#courseForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var c = readForm();
+      var errKey = validateCourse(c);
+      if(errKey){ showFormErr(errKey); return; }
+      if(editingId){
+        var idx = state.courses.findIndex(function(x){ return x.id === editingId; });
+        if(idx !== -1){
+          var old = state.courses[idx];
+          state.courses[idx] = Object.assign({}, old, c);
+        }
+      } else {
+        c.id = uid(); c.gid = newGid();
+        state.courses.push(c);
+      }
+      save();
+      resetForm();
+      renderAll();
+      $("#fCode").focus();
+    });
+    $("#cancelEdit").addEventListener("click", resetForm);
+
+    document.addEventListener("click", function(e){
+      var ed = e.target.closest("[data-edit]");
+      if(ed){ startEdit(ed.getAttribute("data-edit")); return; }
+      var dl = e.target.closest("[data-del]");
+      if(dl){
+        var id = dl.getAttribute("data-del");
+        state.courses = state.courses.filter(function(c){ return c.id !== id; });
+        if(editingId === id) resetForm();
+        save(); renderAll();
+        return;
+      }
+      var act = e.target.closest("[data-act]");
+      if(act){
+        var a = act.getAttribute("data-act");
+        if(a === "g-signin") requireAuth(null);
+        if(a === "g-signout") signOut();
+        return;
+      }
+      var lg = e.target.closest("[data-lang]");
+      if(lg){
+        state.lang = lg.getAttribute("data-lang");
+        save();
+        applyI18n(); refreshDayLabels(); renderBreaks(); renderAll(); renderGoogle();
+      }
+    });
+
+    $("#loadSample").addEventListener("click", loadSample);
+    $("#dlIcs").addEventListener("click", downloadICS);
+    $("#gSync").addEventListener("click", function(){ requireAuth(syncToGoogle); });
+    $("#gRemove").addEventListener("click", function(){ requireAuth(removeFromGoogle); });
+    $("#saveClient").addEventListener("click", function(){
+      state.clientId = $("#clientId").value.trim();
+      save();
+      gClient = null;
+      setStatus(t("g_client_saved"), "ok");
+      renderGoogle();
+    });
+  }
+
+  /* ---------------------------- init ---------------------------- */
+  function init(){
+    load();
+    buildStaticPickers();
+    applyI18n();
+    $("#termStart").value = state.term.start;
+    $("#termEnd").value = state.term.end;
+    $("#reminder").value = state.reminder;
+    renderBreaks();
+    resetForm();
+    wire();
+    renderAll();
+    renderGoogle();
+    $("#guide").open = !clientId();
+    loadGsi();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
